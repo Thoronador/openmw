@@ -1,30 +1,38 @@
 os:
  - linux
 language: cpp
+compiler:
+ - gcc
 branches:
   only:
-    - master
     - travis-ci-thoro
     - travis-ci-build-test
     - coverity_scan
-matrix:
-  include:
-    - os: linux
-      env:
-        ANALYZE="scan-build-3.6 --use-cc clang-3.6 --use-c++ clang++-3.6 "
-      compiler: clang
-  allow_failures:
-    - env: ANALYZE="scan-build-3.6 --use-cc clang-3.6 --use-c++ clang++-3.6 "
-
 before_install:
  - ./CI/before_install.linux.sh
 before_script:
  - ./CI/before_script.linux.sh
 script:
- - cd ./build
- - if [ "$COVERITY_SCAN_BRANCH" != 1 ]; then ${ANALYZE}make -j4; fi
- - if [ "$COVERITY_SCAN_BRANCH" != 1 ] && [ "${TRAVIS_OS_NAME}" = "osx" ]; then make package; fi
-after_script:
- - ./openmw_test_suite
+ - if [[ -f /home/travis/build/Thoronador/openmw/cov-int/build-log.txt ]] ; then cat /home/travis/build/Thoronador/openmw/cov-int/build-log.txt | head -n 500 ; fi
+ - if [[ -f /home/travis/build/Thoronador/openmw/build/cov-int/build-log.txt ]] ; then cat /home/travis/build/Thoronador/openmw/build/cov-int/build-log.txt | head -n 500 ; fi
+ - if [[ -f /home/travis/build/Thoronador/openmw/cov-int/scm_log.txt ]] ; then cat /home/travis/build/Thoronador/openmw/cov-int/scm_log.txt | head -n 500 ; fi
+ - if [[ -f /home/travis/build/Thoronador/openmw/build/cov-int/scm_log.txt ]] ; then cat /home/travis/build/Thoronador/openmw/build/cov-int/scm_log.txt | head -n 500 ; fi
+ - echo "coverity stuff should be done by now."
 notifications:
   email: false
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "K1fjiyf5eVWPNdV49DM4CKYO8epg0t9d3vYSFALG9JrWaX5iTnqW0pNCmY3BMJ9Q1xDhiQt81kTd41cAngdUvFUNF9KkY98cL92I/1s7G10Er2VXiWg0USNTfwmWdAAwRsPp+ZumxSPvGkV5Lkle7sL5ub5czpEJIo2xyHX8WuM="
+
+addons:
+  coverity_scan:
+    project:
+      name: "Thoronador/openmw"
+      description: "OpenMW"
+    notification_email: thoronador@users.sourceforge.net
+    build_command_prepend: "cd build"
+    build_command:   "make -j4"
+    branch_pattern: coverity_scan
